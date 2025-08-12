@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Codice.Client.Common.GameUI;
+using System.Collections.Generic;
 using Unity.FPS.Game;
 using UnityEngine;
 using UnityEngine.AI;
@@ -20,7 +21,7 @@ public class ZombieAI : MonoBehaviour
     private float AttackTimer = 0;
     private bool hasPatrollingDestination;
     private float raycastChaseDistance = 10;
-    private float attackRange = 4f;
+    private float attackRange = 2f;
 
     public enum ZombieState
     {
@@ -41,7 +42,6 @@ public class ZombieAI : MonoBehaviour
 
     private void Update()
     {
-        LineOfSightCheck();
         switch (currentState)
         {
             case ZombieState.Idle:
@@ -72,29 +72,27 @@ public class ZombieAI : MonoBehaviour
     {
         Debug.Log("Zombie is attacking.");
 
-        // Face the player at the start of attack
-        Vector3 lookDir = (player.transform.position - transform.position).normalized;
-        lookDir.y = 0;
-        transform.rotation = Quaternion.LookRotation(lookDir);
-
-        /*float distance = Vector3.Distance(transform.position, player.transform.position);
-
+        float distance = Vector3.Distance(transform.position, player.transform.position);
         if (distance > attackRange)
         {
             // Player moved out of range → chase again
             currentState = ZombieState.Chasing;
             return;
-        }*/
+        }
+
+        // Face the player at the start of attack
+        Vector3 lookDir = (player.transform.position - transform.position).normalized;
+        lookDir.y = 0;
+        transform.rotation = Quaternion.LookRotation(lookDir);
 
         agent.speed = 0;
 
         animator.SetBool("Running", false);
         animator.SetBool("Attacking", true);
 
-        
-
         AttackTimer += Time.deltaTime; 
-        if (AttackTimer >= 2.18f)
+
+        if (AttackTimer >= 1f)
         {
             player.GetComponent<Damageable>().InflictDamage(20, false, player);
             AttackTimer = 0;
@@ -105,6 +103,8 @@ public class ZombieAI : MonoBehaviour
     {
         Debug.Log("Zombie is chasing.");
 
+        AttackTimer = 0;
+
         animator.SetBool("Idle", false);
         animator.SetBool("Attacking", false);
         animator.SetBool("Running", true);
@@ -114,10 +114,12 @@ public class ZombieAI : MonoBehaviour
 
         float distance = Vector3.Distance(transform.position, player.transform.position);
 
+
         if (distance <= attackRange)
         {
             currentState = ZombieState.Attacking;
         }
+
 
     }
 
@@ -126,8 +128,6 @@ public class ZombieAI : MonoBehaviour
         Debug.Log("Zombie is patrolling.");
         
         animator.SetBool("Running", true);
-
-        LineOfSightCheck();
 
         if (hasPatrollingDestination == false)
         {
@@ -141,6 +141,8 @@ public class ZombieAI : MonoBehaviour
             currentState = ZombieState.Idle;
             hasPatrollingDestination = false;
         }
+
+        LineOfSightCheck();
     }
 
     private void HandleIdle()
@@ -159,6 +161,7 @@ public class ZombieAI : MonoBehaviour
             idleTimer = 0;
         }
 
+        LineOfSightCheck();
     }
 
     public static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
