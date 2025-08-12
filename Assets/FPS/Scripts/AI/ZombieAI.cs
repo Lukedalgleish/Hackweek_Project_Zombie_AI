@@ -73,6 +73,7 @@ public class ZombieAI : MonoBehaviour
         Debug.Log("Zombie is attacking.");
 
         float distance = Vector3.Distance(transform.position, player.transform.position);
+
         if (distance > attackRange)
         {
             // Player moved out of range → chase again
@@ -90,13 +91,13 @@ public class ZombieAI : MonoBehaviour
         animator.SetBool("Running", false);
         animator.SetBool("Attacking", true);
 
-        AttackTimer += Time.deltaTime; 
+        /*AttackTimer += Time.deltaTime; 
 
         if (AttackTimer >= 1f)
         {
             player.GetComponent<Damageable>().InflictDamage(20, false, player);
             AttackTimer = 0;
-        }
+        }*/
     }
 
     private void HandleChasing()
@@ -113,7 +114,6 @@ public class ZombieAI : MonoBehaviour
         agent.SetDestination(player.transform.position);
 
         float distance = Vector3.Distance(transform.position, player.transform.position);
-
 
         if (distance <= attackRange)
         {
@@ -191,10 +191,23 @@ public class ZombieAI : MonoBehaviour
             if (hit.collider.gameObject == player)
             {
                 Debug.Log("Player has been hit");
-
                 currentState = ZombieState.Chasing;
             }
 
+        }
+    }
+
+    public void DealDamage()
+    {
+        // You can refine this with range checks, raycasts, etc.
+        float distance = Vector3.Distance(transform.position, player.transform.position);
+        if (distance <= attackRange)
+        {
+            Debug.Log("Zombie hit the player!");
+            player.GetComponent<Damageable>().InflictDamage(20, false, player);
+
+            // Call your player's TakeDamage() method here
+            // player.GetComponent<PlayerHealth>().TakeDamage(10);
         }
     }
 }

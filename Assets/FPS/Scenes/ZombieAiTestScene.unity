@@ -1589,7 +1589,6 @@ MonoBehaviour:
   roamRadius: 10
   roamInterval: 5
   timeSpentIdle: 6
-  attackDamage: 10
 --- !u!114 &1947755499
 MonoBehaviour:
   m_ObjectHideFlags: 0
