@@ -11,17 +11,22 @@ public class ZombieAI : MonoBehaviour
     public float roamRadius = 10f;
     public float roamInterval = 5f;
     public float timeSpentIdle = 10f;
-    
+
+    private CapsuleCollider agentCollider; 
     private NavMeshAgent agent;
     private Animator animator;
+    private Health health;
 
-    private string currentAnimState = "Idle";
     private float roamTimer;
     private float idleTimer = 0;
-    private float AttackTimer = 0;
     private bool hasPatrollingDestination;
+    private bool deathAnimPlayed = false;
     private float raycastChaseDistance = 10;
     private float attackRange = 2f;
+    private float damage = 20;
+    private float destroyZombietimer = 0; 
+    private float destroyTimer = 5;
+
 
     public enum ZombieState
     {
@@ -34,10 +39,17 @@ public class ZombieAI : MonoBehaviour
 
     void Awake()
     {
+        agentCollider = GetComponent<CapsuleCollider>();
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         roamTimer = roamInterval;
+        health = GetComponent<Health>();
+        
+    }
 
+    void Start()
+    {
+        health.OnDie += OnDeath;
     }
 
     private void Update()
@@ -57,15 +69,37 @@ public class ZombieAI : MonoBehaviour
                 HandleAttacking();
                 break;
             case ZombieState.Dead:
-                HandleDead();
+                HandleDeath();
                 break;
         }
     }
 
-    private void HandleDead()
+    private void OnDeath()
+    {
+        currentState = ZombieState.Dead;
+    }
+
+    private void HandleDeath()
     {
         Debug.Log("Zombie is dead.");
-        throw new System.NotImplementedException();
+
+        if (deathAnimPlayed == true && destroyZombietimer >= destroyTimer)
+        {
+            Destroy(gameObject);
+        }
+
+        agent.speed = 0;
+        agent.enabled = false;
+        animator.applyRootMotion = true;
+        agentCollider.enabled = false;
+
+        animator.SetBool("Idle", false);
+        animator.SetBool("Attacking", false);
+        animator.SetBool("Running", false);
+        animator.SetBool("Death", true);
+
+        deathAnimPlayed = true;
+        destroyZombietimer += Time.deltaTime;
     }
 
     private void HandleAttacking()
@@ -90,21 +124,11 @@ public class ZombieAI : MonoBehaviour
 
         animator.SetBool("Running", false);
         animator.SetBool("Attacking", true);
-
-        /*AttackTimer += Time.deltaTime; 
-
-        if (AttackTimer >= 1f)
-        {
-            player.GetComponent<Damageable>().InflictDamage(20, false, player);
-            AttackTimer = 0;
-        }*/
     }
 
     private void HandleChasing()
     {
         Debug.Log("Zombie is chasing.");
-
-        AttackTimer = 0;
 
         animator.SetBool("Idle", false);
         animator.SetBool("Attacking", false);
@@ -119,8 +143,6 @@ public class ZombieAI : MonoBehaviour
         {
             currentState = ZombieState.Attacking;
         }
-
-
     }
 
     private void HandlePatrolling()
@@ -204,10 +226,12 @@ public class ZombieAI : MonoBehaviour
         if (distance <= attackRange)
         {
             Debug.Log("Zombie hit the player!");
-            player.GetComponent<Damageable>().InflictDamage(20, false, player);
-
-            // Call your player's TakeDamage() method here
-            // player.GetComponent<PlayerHealth>().TakeDamage(10);
+            player.GetComponent<Damageable>().InflictDamage(damage, false, player);
         }
+    }
+
+    public void DestoryZombie()
+    {
+
     }
 }
